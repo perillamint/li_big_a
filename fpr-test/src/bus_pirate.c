@@ -120,50 +120,45 @@ int bp_uart_set_power(int fd, int power)
     return -1;
 }
 
-int bp_do_usrt(int fd, char *tx, int txlen, char *rx, int rxlen)
+int bp_do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen)
 {
   int marker = 0;
   char cmd;
   char buf[1024];
 
-  while(txlen > 16) {
-    txlen -= 16;
-    cmd = BP_UART_BULKWRITE;
-    cmd |= 16 - 1;
-
-    if(bp_send_command(fd, cmd))
-      return -1;
-
-    write(fd, &tx[marker], 16);
-    read(fd, buf, 16);
-
-    for(int i = 0; i < 16; i++)
-      {
-        if(buf[i] != 0x01)
-          return -1;
-      }
-
-    marker += 16;
-  }
-
-  if(txlen > 0)
+  while(txlen > 0)
     {
+      int sendlen = 0;
       cmd = BP_UART_BULKWRITE;
-      cmd |= txlen - 1;
+
+      if(txlen > 16)
+        {
+          cmd |= 16 - 1;
+          txlen -= 16;
+          sendlen = 16;
+        }
+      else
+        {
+          cmd |= txlen - 1;
+          sendlen = txlen;
+          txlen = 0;
+        }
 
       if(bp_send_command(fd, cmd))
         return -1;
 
-      write(fd, &tx[marker], txlen);
-      read(fd, buf, txlen);
+      write(fd, &tx[marker], sendlen);
+      read(fd, buf, sendlen);
 
-      for(int i = 0; i < txlen; i++)
+      for(int i = 0; i < sendlen; i++)
         {
           if(buf[i] != 0x01)
             return -1;
         }
+
+      marker += sendlen;
     }
-  
+
   cmd = BP_UART_RXEN;
   if(bp_send_command(fd, cmd))
     return -1;

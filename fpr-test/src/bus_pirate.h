@@ -52,4 +52,4 @@ static const char binary_mode_magic[] = {
 int bp_exit_binary(int fd);
 int bp_enter_uart_binary(int fd);
 int bp_uart_set_power(int fd, int power);
-int bp_do_usrt(int fd, char *tx, int txlen, char *rx, int rxlen);
+int bp_do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen);

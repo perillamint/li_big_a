@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #include "bus_pirate.h"
+#include "gt511c1r.h"
 
 const static struct option long_options[] = {
   {"disable-bus-pirate", required_argument, NULL, 1 },
@@ -30,15 +31,16 @@ void print_usage(char *bin_name)
   exit(1);
 }
 
-void write_to_console(int fd, char *msg, int len)
+int do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen)
 {
   if(bus_pirate_flag)
     {
-      //TODO: Bus pirate stuff.
+      return bp_do_usrt(fd, tx, txlen, rx, rxlen);
     }
   else
     {
-      write(fd, msg, len);
+      //TODO: Normal UART stuff.
+      write(fd, tx, txlen);
     }
 }
 
@@ -93,7 +95,12 @@ int main(int argc, char **argv)
       bp_uart_set_power(devicefd, 1);
     }
 
-  //Display interactive console.
+  struct gt511c1r fpr;
+  gt511c1r_init(&fpr, devicefd, do_usrt);
+  gt511c1r_open(&fpr);
+  gt511c1r_set_led(&fpr, 0x00000001);
+
+  //TODO: Display interactive console.
 
   if(bus_pirate_flag)
     {
