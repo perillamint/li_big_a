@@ -132,12 +132,50 @@ int main(int argc, char **argv)
   struct gt511c1r fpr;
   gt511c1r_init(&fpr, devicefd, do_usrt);
   gt511c1r_open(&fpr);
-  gt511c1r_set_led(&fpr, 0x00000001);
 
-  gt511c1r_enroll_fingerprint(&fpr, 0x00000000);
+  int userinput = 0;
+  int id = 0;
+
+  for(;;)
+    {
+      printf("Input number\n"
+             "0 - Exit program\n"
+             "1 - Clear fingerprint memory\n"
+             "2 - Enroll finger\n"
+             "3 - Identify finger\n"
+             "select>");
+      scanf("%d", &userinput);
+
+      switch(userinput)
+        {
+        case 0:
+          do_cleanup();
+        case 1:
+          gt511c1r_delete_all_fingerprint(&fpr);
+          break;
+        case 2:
+          printf("Input slot number: ");
+          scanf("%d", &userinput);
+          if(userinput < 0 || userinput > 19)
+            {
+              printf("Wrong number!\n");
+              break;
+            }
+          gt511c1r_enroll_fingerprint(&fpr, userinput);
+          break;
+        case 3:
+          printf("Identifying!\n");
+          id = gt511c1r_identify_fingerprint(&fpr);
+          printf("Identified as fingerprint #%d\n", id);
+          break;
+        default:
+          printf("Not in range!\n");
+        }
+    }
 
   //TODO: Display interactive console.
 
+  sleep(1);
   do_cleanup();
   return 0;
 }

@@ -26,4 +26,6 @@ int gt511c1r_init(struct gt511c1r *obj, int fd,
                                  void *rx, int rxlen));
 int gt511c1r_open(struct gt511c1r *obj);
 int gt511c1r_set_led(struct gt511c1r *obj, uint32_t param);
+int gt511c1r_delete_all_fingerprint(struct gt511c1r *obj);
 int gt511c1r_enroll_fingerprint(struct gt511c1r *obj, uint32_t param);
+int gt511c1r_identify_fingerprint(struct gt511c1r *obj);

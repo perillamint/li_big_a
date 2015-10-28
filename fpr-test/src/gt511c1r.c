@@ -62,7 +62,7 @@ gt511c1r_response gt511c1r_do_command(struct gt511c1r *obj,
   memset(&retval, 0, sizeof(gt511c1r_response));
 
   //Build packet
-  gt511c1r_fill_packet(&txpacket, 0x00000000, command);
+  gt511c1r_fill_packet(&txpacket, param, command);
 
   //Send command and receive response.
   obj -> do_usrt(obj -> fd, &txpacket, 12, &rxpacket, 12);
@@ -97,8 +97,11 @@ int gt511c1r_open(struct gt511c1r *obj)
 
 int gt511c1r_set_led(struct gt511c1r *obj, uint32_t param)
 {
+  gt511c1r_response resp;
+
   //CmosLed command
-  if(gt511c1r_do_command(obj, 0x00000000, 0x0012).ack != 1)
+  resp = gt511c1r_do_command(obj, param, 0x0012);
+  if(resp.ack != 1)
     {
       fprintf(stderr, "E: CmosLed failure!\n");
       return -1;
@@ -111,20 +114,30 @@ int gt511c1r_capture_fingerprint(struct gt511c1r *obj, uint32_t param)
 {
   gt511c1r_response resp;
 
+  //Turn on LED.
+  gt511c1r_set_led(obj, 0x00000001);
+  //Wait until press
   do
     {
       printf("Press finger!\n");
       sleep(1);
-      resp = gt511c1r_do_command(obj, 0x00000000, 0x0060);
+      resp = gt511c1r_do_command(obj, 0x00000000, 0x0026);
     }
-  while(resp.ack != 1 || resp.param != 0);
-  
+  while(resp.ack && resp.param != 0);
+
+  //Turn on LED.
+  gt511c1r_set_led(obj, 0x00000001);
   //CaptureFinger command
-  if(gt511c1r_do_command(obj, param, 0x0060).ack != 1)
+  resp = gt511c1r_do_command(obj, param, 0x0060);
+  if(resp.ack != 1)
     {
-      fprintf(stderr, "E: CaptureFinger failure!\n");
+      fprintf(stderr, "E: CaptureFinger failure!\n"
+              "Errorcode: 0x%04X\n", resp.param);
       return -1;
     }
+
+  printf("Release finger!\n");
+  sleep(1);
 
   return 0;
 }
@@ -141,6 +154,8 @@ int gt511c1r_enroll_fingerprint(struct gt511c1r *obj, uint32_t param)
   //Enroll1-3 command
   for(int i = 0; i < 3; i++)
     {
+      fprintf(stderr, "Enrolling #%d\n", i+1);
+
       if(gt511c1r_capture_fingerprint(obj, 0x00000001) != 0)
         {
           return -1;
@@ -156,7 +171,7 @@ int gt511c1r_enroll_fingerprint(struct gt511c1r *obj, uint32_t param)
   return 0;
 }
 
-int gt511c1r_delete_all_fingerprint(struct gt511c1r *obj, uint32_t param)
+int gt511c1r_delete_all_fingerprint(struct gt511c1r *obj)
 {
   //DeleteAll command
   if(gt511c1r_do_command(obj, 0x00000000, 0x0041).ack != 1)
@@ -166,4 +181,21 @@ int gt511c1r_delete_all_fingerprint(struct gt511c1r *obj, uint32_t param)
     }
 
   return 0;
+}
+
+int gt511c1r_identify_fingerprint(struct gt511c1r *obj)
+{
+  gt511c1r_response resp;
+
+  gt511c1r_capture_fingerprint(obj, 0x00000001);
+
+  resp = gt511c1r_do_command(obj, 0x00000000, 0x0051);
+  if(resp.ack != 1)
+    {
+      fprintf(stderr, "E: Identify failure!\n"
+              "Errorcode: 0x%04X\n", resp.param);
+      return -1;
+    }
+
+  return resp.param;
 }
