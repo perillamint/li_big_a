@@ -52,34 +52,118 @@ int gt511c1r_init(struct gt511c1r *obj, int fd,
   obj -> do_usrt = do_usrt;
 }
 
+gt511c1r_response gt511c1r_do_command(struct gt511c1r *obj,
+                                      uint32_t param, uint16_t command)
+{
+  struct gt511c1r_packet txpacket;
+  struct gt511c1r_packet rxpacket;
+  gt511c1r_response retval;
+
+  memset(&retval, 0, sizeof(gt511c1r_response));
+
+  //Build packet
+  gt511c1r_fill_packet(&txpacket, 0x00000000, command);
+
+  //Send command and receive response.
+  obj -> do_usrt(obj -> fd, &txpacket, 12, &rxpacket, 12);
+
+  //Verify checksum.
+  if(gt511c1r_verify_checksum(&rxpacket) != 0)
+    {
+      fprintf(stderr, "E: Checksum failure!\n");
+      retval.csumfail = 1;
+      return retval;
+    }
+
+  if(rxpacket.command == 0x30)
+    retval.ack = 1;
+
+  retval.param = rxpacket.param;
+
+  return retval;
+}
+
 int gt511c1r_open(struct gt511c1r *obj)
 {
-  char buf[1024];
-  struct gt511c1r_packet packet;
-
-  gt511c1r_fill_packet(&packet, 0x00000000, 0x0001);
-
-  obj -> do_usrt(obj -> fd, &packet, 12, buf, 12);
-
-  for(int i = 0; i < 12; i++) {
-    printf("0x%02X ", buf[i]);
-  }
-  printf("\n");
+  //Open command
+  if(gt511c1r_do_command(obj, 0x00000000, 0x0001).ack != 1)
+    {
+      fprintf(stderr, "E: open failure!\n");
+      return -1;
+    }
 
   return 0;
 }
 
 int gt511c1r_set_led(struct gt511c1r *obj, uint32_t param)
 {
-  char buf[1024];
-  struct gt511c1r_packet packet;
+  //CmosLed command
+  if(gt511c1r_do_command(obj, 0x00000000, 0x0012).ack != 1)
+    {
+      fprintf(stderr, "E: CmosLed failure!\n");
+      return -1;
+    }
 
-  gt511c1r_fill_packet(&packet, param, 0x0012);
+  return 0;
+}
 
-  obj -> do_usrt(obj -> fd, &packet, 12, buf, 12);
+int gt511c1r_capture_fingerprint(struct gt511c1r *obj, uint32_t param)
+{
+  gt511c1r_response resp;
 
-  for(int i = 0; i < 12; i++) {
-    printf("0x%02X ", buf[i]);
-  }
-  printf("\n");
+  do
+    {
+      printf("Press finger!\n");
+      sleep(1);
+      resp = gt511c1r_do_command(obj, 0x00000000, 0x0060);
+    }
+  while(resp.ack != 1 || resp.param != 0);
+  
+  //CaptureFinger command
+  if(gt511c1r_do_command(obj, param, 0x0060).ack != 1)
+    {
+      fprintf(stderr, "E: CaptureFinger failure!\n");
+      return -1;
+    }
+
+  return 0;
+}
+
+int gt511c1r_enroll_fingerprint(struct gt511c1r *obj, uint32_t param)
+{
+  //EnrollStart command
+  if(gt511c1r_do_command(obj, param, 0x0022).ack != 1)
+    {
+      fprintf(stderr, "E: EnrollStart failure!\n");
+      return -1;
+    }
+
+  //Enroll1-3 command
+  for(int i = 0; i < 3; i++)
+    {
+      if(gt511c1r_capture_fingerprint(obj, 0x00000001) != 0)
+        {
+          return -1;
+        }
+
+      if(gt511c1r_do_command(obj, 0x00000000, 0x0023 + i).ack != 1)
+        {
+          fprintf(stderr, "E: Enroll%d failed!\n", i+1);
+          return -1;
+        }
+    }
+
+  return 0;
+}
+
+int gt511c1r_delete_all_fingerprint(struct gt511c1r *obj, uint32_t param)
+{
+  //DeleteAll command
+  if(gt511c1r_do_command(obj, 0x00000000, 0x0041).ack != 1)
+    {
+      fprintf(stderr, "E: DeleteAll failure!\n");
+      return -1;
+    }
+
+  return 0;
 }

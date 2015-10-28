@@ -3,7 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <termios.h>
 
+#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -12,20 +14,22 @@
 
 const static struct option long_options[] = {
   {"disable-bus-pirate", required_argument, NULL, 1 },
-  {"enable-ioctl"      , required_argument, NULL, 2 },
+  {"disable-termiobaud", required_argument, NULL, 2 },
   {NULL                , 0                , NULL, 0 }
 };
 
 static int  bus_pirate_flag = 1;
-static int  ioctl_flag      = 0;
+static int  termiobaud      = 1;
 static char *device_file    = NULL;
+
+static int devicefd = 0;
 
 void print_usage(char *bin_name)
 {
   fprintf(stderr,
           "Usage   : %s [OPTION] [Character device file]\n\n"
           "Options : --disable-bus-pirate (true|false)\n"
-          "          --enable-ioctl       (true|false)\n\n"
+          "          --disable-termiobaud (true|false)\n\n"
           "Note    : Bus pirate mode is enabled by default.\n", bin_name);
 
   exit(1);
@@ -44,8 +48,21 @@ int do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen)
     }
 }
 
+void do_cleanup()
+{
+  if(bus_pirate_flag)
+    {
+      bp_exit_binary(devicefd);
+    }
+
+  close(devicefd);
+  exit(0);
+}
+
 int main(int argc, char **argv)
 {
+  signal(SIGINT, do_cleanup);
+
   for(;;)
     {
       int options_index = 0;
@@ -66,7 +83,7 @@ int main(int argc, char **argv)
               if(c == 1)
                 bus_pirate_flag = 0;
               if(c == 2)
-                ioctl_flag = 1;
+                termiobaud = 1;
             }
         }
     }
@@ -80,7 +97,7 @@ int main(int argc, char **argv)
 
   //Initialization complete!
 
-  int devicefd = open(device_file, O_RDWR);
+  devicefd = open(device_file, O_RDWR);
 
   if(devicefd == -1)
     {
@@ -89,10 +106,27 @@ int main(int argc, char **argv)
     }
   printf("Device file: %s\n", device_file);
 
+  if(termiobaud)
+    {
+      struct termios options;
+      speed_t speed = B9600;
+
+      if(bus_pirate_flag)
+        {
+          speed = B115200;
+        }
+
+      tcgetattr(devicefd, &options);
+      cfsetispeed(&options, speed);
+      cfsetospeed(&options, speed);
+      tcsetattr(devicefd, TCSANOW, &options);
+    }
+
   if(bus_pirate_flag)
     {
       bp_enter_uart_binary(devicefd);
       bp_uart_set_power(devicefd, 1);
+      fprintf(stderr, "Entered BP binary mode.\n");
     }
 
   struct gt511c1r fpr;
@@ -100,12 +134,10 @@ int main(int argc, char **argv)
   gt511c1r_open(&fpr);
   gt511c1r_set_led(&fpr, 0x00000001);
 
+  gt511c1r_enroll_fingerprint(&fpr, 0x00000000);
+
   //TODO: Display interactive console.
 
-  if(bus_pirate_flag)
-    {
-      //      bp_exit_binary(devicefd);
-    }
-  close(devicefd);
+  do_cleanup();
   return 0;
 }

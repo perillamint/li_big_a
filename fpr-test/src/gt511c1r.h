@@ -13,6 +13,12 @@ struct gt511c1r {
   int (*do_usrt)(int fd, void *tx, int txlen, void *rx, int rxlen);
 };
 
+typedef struct {
+  int csumfail;
+  int ack;
+  uint32_t param;
+} gt511c1r_response;
+
 void gt511c1r_calc_checksum(struct gt511c1r_packet *packet);
 int gt511c1r_verify_checksum(struct gt511c1r_packet *packet);
 int gt511c1r_init(struct gt511c1r *obj, int fd,
@@ -20,3 +26,4 @@ int gt511c1r_init(struct gt511c1r *obj, int fd,
                                  void *rx, int rxlen));
 int gt511c1r_open(struct gt511c1r *obj);
 int gt511c1r_set_led(struct gt511c1r *obj, uint32_t param);
+int gt511c1r_enroll_fingerprint(struct gt511c1r *obj, uint32_t param);

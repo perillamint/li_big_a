@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "bus_pirate.h"
 
@@ -40,9 +41,6 @@ int bp_exit_binary(int fd)
   cmd = BP_BINARY_EXIT;
   if(bp_send_command(fd, cmd))
     return -1;
-
-  //Flush buffer.
-  read(fd, buf, 1024);
 }
 
 /**********************************
@@ -61,8 +59,14 @@ int bp_enter_uart_binary(int fd)
   char buf[1024];
   char cmd = 0;
 
+  //Flush command by sending ret.
+  write(fd, "\r\n", 2);
+  //Sleep for a bit.
+  usleep(1000*500);
   //Flush buffer.
+  fcntl(fd, F_SETFL, FNDELAY);
   read(fd, buf, 1024);
+  fcntl(fd, F_SETFL, 0);
 
   //Enter binary mode.
 
@@ -147,7 +151,7 @@ int bp_do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen)
       if(bp_send_command(fd, cmd))
         return -1;
 
-      write(fd, &tx[marker], sendlen);
+      write(fd, &((char*)tx)[marker], sendlen);
       read(fd, buf, sendlen);
 
       for(int i = 0; i < sendlen; i++)
