@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <termios.h>
 #include "bus_pirate.h"
 
 int bp_send_command(int fd, char cmd)
@@ -11,6 +11,7 @@ int bp_send_command(int fd, char cmd)
   char buf;
 
   write(fd, &cmd, 1);
+  tcdrain(fd);
   read(fd, &buf, 1);
 
   if(buf != 0x01)
@@ -27,8 +28,10 @@ int bp_exit_binary(int fd)
   char buf[1024];
   char cmd;
 
+  usleep(10000);
   cmd = BP_BINARY_RESET;
   write(fd, &cmd, 1);
+  tcdrain(fd);
   read(fd, buf, 5);
   buf[5] = 0;
 
@@ -58,19 +61,25 @@ int bp_enter_uart_binary(int fd)
 {
   char buf[1024];
   char cmd = 0;
+  struct termios options;
 
   //Flush command by sending ret.
-  write(fd, "\r\n", 2);
+  //write(fd, "\r\n", 2);
   //Sleep for a bit.
   usleep(1000*500);
   //Flush buffer.
+  //usleep(1000*500);
+  /*
   fcntl(fd, F_SETFL, FNDELAY);
   read(fd, buf, 1024);
   fcntl(fd, F_SETFL, 0);
+  */
 
   //Enter binary mode.
 
   write(fd, binary_mode_magic, binary_mode_magic_size);
+  tcdrain(fd);
+  usleep(10000);
   read(fd, buf, 5);
   buf[5] = 0;
 
@@ -82,6 +91,8 @@ int bp_enter_uart_binary(int fd)
 
   cmd = BP_UART_MODE;
   write(fd, &cmd, 1);
+  tcdrain(fd);
+  usleep(10000);
   read(fd, buf, 4);
   buf[4] = 0;
 
@@ -152,6 +163,7 @@ int bp_do_usrt(int fd, void *tx, int txlen, void *rx, int rxlen)
         return -1;
 
       write(fd, &((char*)tx)[marker], sendlen);
+      tcdrain(fd);
       read(fd, buf, sendlen);
 
       for(int i = 0; i < sendlen; i++)

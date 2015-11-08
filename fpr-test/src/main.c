@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 
   //Initialization complete!
 
-  devicefd = open(device_file, O_RDWR);
+  devicefd = open(device_file, O_RDWR | O_NOCTTY);
 
   if(devicefd == -1)
     {
@@ -117,9 +117,16 @@ int main(int argc, char **argv)
         }
 
       tcgetattr(devicefd, &options);
+
+      //8N1
+      options.c_cflag &= ~PARENB;
+      options.c_cflag &= ~CSTOPB;
+      options.c_cflag &= ~CSIZE;
+      options.c_cflag |= CS8;
+
       cfsetispeed(&options, speed);
       cfsetospeed(&options, speed);
-      tcsetattr(devicefd, TCSANOW, &options);
+      tcsetattr(devicefd, TCSAFLUSH, &options);
     }
 
   if(bus_pirate_flag)
