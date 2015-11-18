@@ -1,8 +1,6 @@
-
 # NEED : HSM Module interface to encrypt key
 # NEED : Network Module to request public PGP key
-
-
+import struct
 
 import otrimplement
 
@@ -18,7 +16,7 @@ class MessageBlock:
         self.msg = None
         self.msgtype = None
         return
-	
+    
     def msg_to_message_block(msg, msgtype) :
         # convert msg to bytestring
         bytemsg = b''
@@ -38,12 +36,29 @@ class MessageBlock:
         return msgblock
 
     def byte_to_message_block(bytestr) :
+        # check bytestr is at least 6bytes
+        if len(bytestr) < 6 :
+            raise MessageBlockParsingError
+
+        # unpack info of MessageBlock(6bytes)
+        info = struct.unpack('!hi', bytestr[0:5])
+        if info[0] < 0 or info[0] > 3 :
+            raise MessageBlockParsingError
+        if info[1] < 0 or info[1] > 1024 :
+            raise MessageBlockParsingError
+        elif info[1] != len(bytestr[6:len(bytestr)]) :
+            raise MessageBlockParsingError
         
-        return None
+        # create message block
+        msgblock = MessageBlock()
+        msg.msg = bytestr[6:info[1]]
+        msg.msgtype = info[0]
+
+        return msgblock
 
     def message_block_to_byte(self) :
-        
-        return None
+        # pack MessageBlock to byte
+        return struct.pack('!hi', self.msgtype, len(self.msg)) + self.msg
 
 
 
@@ -249,7 +264,7 @@ class OtrModule:
 
         elif msgtyp is MSG_TYPE_REQUEST_VERIFY :
             result = _verify_other_(msgblock.msg)
-            RequestVerifyCation(MSG_TYPE_RECEIV_VERIFY)
+            RequestVerifyCation(MSG_TYPE_RECEIVE_VERIFY)
             return True
 
         elif msgtyp == MSG_TYPE_RECEIVE_VERIFY :
@@ -261,8 +276,6 @@ class OtrModule:
             return False
 
         return False
-
-
 
 
 
