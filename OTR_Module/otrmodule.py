@@ -1,7 +1,10 @@
 
+# NEED : HSM Module interface to encrypt key
+# NEED : Network Module to request public PGP key
 
 
 
+import otrimplement
 
 # Type of Message
 MSG_TYPE_NOT_ENCRYPTED = 0
@@ -9,7 +12,7 @@ MSG_TYPE_ENCRYPTED = 1
 MSG_TYPE_REQUEST_VERIFY = 2
 MSG_TYPE_RECEIVE_VERIFY = 3
 
-# Get message and wrapping it
+# Wrapper for Message
 class MessageBlock:
     def __init(self) :
         self.msg = None
@@ -49,10 +52,10 @@ class MessageBlock:
 ERR_OTR_NOT_ESTABLISHED = 0
 ERR_MULTIPLE_CONNECTION_REQUEST = 1
 ERR_NOT_VERIFIED_USER = 2
+ERR_WRONG_MESSAGE = 3
 
-# NEED : HSM Module interface to encrypt key
-# NEED : Network Module to request public PGP key
 
+# Wrapper for Total OTR Module
 class OtrModule:
     def __init__(self, onSend, onRecv, onErr) :
         self.isConnected = False
@@ -60,10 +63,11 @@ class OtrModule:
         self.onSended = onSend
         self.onReceived = onRecv
         self.onError = onErr
+
+        self.context = otrimplement.Context()
         return
 
 # Interface to main framework
-
     # Connect to other.
     #   return : 
     #       True = connection request successful
@@ -73,9 +77,11 @@ class OtrModule:
             onError(ERR_MULTIPLE_CONNECTION_REQUEST)
             return False
 
-        connection_message = b""
+        connection_message = '?OTRv2?\nI want to start ' \
+        'an OTR private conversation.\n See https://otr.' \
+        'cypherpunks.ca/ for more information.'
+
         onSended(connection_message)
-        
         return True
 
     # Reply to connection request
@@ -88,15 +94,23 @@ class OtrModule:
             onError(ERR_MULTIPLE_CONNECTION_REQUEST)
             return False
 
-# MEED : OTR CONNECTOR        
-        # Handle connection message
-        # 
-        #
+        if msg is None :
+            return False
+
+        # get reply message
+        reply = context.handleConnectionRequest(msg)
+        if reply is None or reply is False :
+            return False
+        elif reply is True :
+            return True
+        
+        # reply to other
+        onSended(reply)
+        return True
 
 
-
-        return False
-
+    def IsConnected(self) :
+        return self.isConnected
 
     # Send verification request to other
     #    communicate with HSM module to get encrypted key
@@ -111,9 +125,12 @@ class OtrModule:
             onError(ERR_INVALID_PARAMETER)
             return
 
-
-        # send Message
+        # encrypt my key
         key = self._encrypt_my_key()
+        if key is None :
+            return
+
+        # send key
         self.SendMessage(key, msgtyp = MSG_TYPE_REQUEST_VERIFY)
         return
 
@@ -138,17 +155,29 @@ class OtrModule:
             onError(ERR_OTR_NOT_ESTABLISHED)
             return False
 
+        
         if (not isVerified) :
-            RequestVerification()
+            onError(ERR_NOT_VERIFIED_USER)
             return False
 
 
         # Create MessageBlcok
         msgblock = msg_to_message_block(msg, msgtyp)
         msg_bstring = msgblock.message_block_to_byte()
-# NEED : OTR CONNECTOR
+
         # pass message to otr
-        onSended(encrypted_message)
+        try :
+            sendqueue = context.handleSend(msg_bstring)
+        except Exception as e :
+            onError(ERR_WRONG_MESSAGE)
+            return False
+        if type(sendqueue) is not type (Queue.queue) :
+            return False
+
+        # Process Send Message by CallBack
+        while not sendqueue.empty() :
+            onSended(sendqueue.get())
+
         return True
 
 
@@ -168,9 +197,33 @@ class OtrModule:
             onError(ERR_OTR_NOT_ESTABLISHED)
             return False
  
-# NEED : OTR CONNECTOR       
-        # pass message to otr
-        
+        # Get Queued Message
+        try :
+            recvqueue = context.handleReceive(msg) 
+        except Exception as e :
+            onError(ERR_WRONG_MESSAGE)
+            return False
+
+        # Process Received Message by CallBack
+        while not recvqueue.empty() : 
+            if not _handle_recv_(queuemessage.get()) :
+                return False
+
+        return True
+
+
+
+    
+       
+# Interface inner module
+    def _encrypt_my_key(self) :
+        return b'this is not emplemented yet'
+
+    def _verify_other_(self, key) :
+        isVerified = True
+        return True
+    
+    def _handle_recv_(self, decrypted_message) :
         if decrypted_message is None:
             return True
 
@@ -207,22 +260,7 @@ class OtrModule:
             onError(ERR_WRONG_MESSAGE)
             return False
 
-        return True
-
-
-
-    
-       
-# Interface inner module
-    def _encrypt_my_key(self) :
-        return b'this is not emplemented yet'
-
-    def _verify_other_(self, key) :
-        return True
-    
-
-
-
+        return False
 
 
 
