@@ -116,15 +116,15 @@ listen:
   ##
   ## ejabberd_service: Interact with external components (transports, ...)
   ##
-  ## - 
-  ##   port: 8888
-  ##   module: ejabberd_service
-  ##   access: all
-  ##   shaper_rule: fast
-  ##   ip: "127.0.0.1"
-  ##   hosts:
-  ##     "icq.example.org":
-  ##       password: "secret"
+  - 
+    port: 8888
+    module: ejabberd_service
+    access: all
+    shaper_rule: fast
+    ip: "127.0.0.1"
+    hosts:
+      "arewesecureyet.org":
+        password: "wjdQygh"
   ##     "sms.example.org":
   ##       password: "secret"
 
