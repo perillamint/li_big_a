@@ -1,0 +1,49 @@
+
+
+<html>
+
+<body>
+
+  <h1>Counting rabbits</h1>
+
+ 
+
+  <script>
+
+//Dependencies
+var xmpp = require('node-xmpp');
+
+//Host configuration
+var host = "arewesecureyet.org";
+var port = "1492";
+var admin = "libiga@arewesecureyet.org";
+var adminPass = "wjdQygh;
+
+var connection = new xmpp.Client({
+    jid: admin,
+    password: adminPass,
+    host: host,
+    port: port
+});
+
+//user to be registered name & pass
+var newUserName = "pepe";
+var newUserPass = "pepePass";
+
+//Stream
+var iq = "<stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' to='localhost'><iq type='set' id='reg2'><query xmlns='jabber:iq:register'><username>" + newUserName + "</username><password>" + newUserPass + "</password></query></iq></stream>";
+
+//Send
+connection.send(iq);
+
+//End
+connection.end();
+
+  </script>
+
+  <h1>...Finished counting</h1>
+
+</body>
+
+</html>
+

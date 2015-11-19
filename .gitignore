@@ -81,3 +81,10 @@ install_manifest.txt
 
 # Binary
 fpr-test/src/fpr-test
+
+
+# Otrmodule cache
+OTR_Module/__pycache__/
+
+
+
