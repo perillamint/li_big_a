@@ -47,16 +47,16 @@ class Context(potr.context.Context) :
 
         return outqueue
 
-        
+    def isConnected(self) :
+        return self.state == potr.context.STATE_ENCRYPTED     
         
     def handleConnectionRequest(self, message_byte_string) :
-        msgbuf = queue.Queue()
-        self.receiveMessage(message_byte_string)
+        self.receiveMessage(message_byte_string, self)
         
         # dequeue injected message and make queue
-        outqueue = Queue.queue()
-        while not msgbuf.empty() :
-            outqueue.put(msgbuf.get())
+        outqueue = queue.Queue()
+        while not self.msgbuf.empty() :
+            outqueue.put(self.msgbuf.get())
 
         return outqueue
 

@@ -72,14 +72,14 @@ ERR_WRONG_MESSAGE = 3
 
 # Wrapper for Total OTR Module
 class OtrModule:
-    def __init__(self, onSend, onRecv, onErr) :
+    def __init__(self, account, onSend, onRecv, onErr) :
         self.isConnected = False
         self.isVerified = False
         self.onSended = onSend
         self.onReceived = onRecv
         self.onError = onErr
 
-        self.context = otrimplement.Context()
+        self.context = otrimplement.Context(account, self)
         return
 
 # Interface to main framework
@@ -88,15 +88,15 @@ class OtrModule:
     #       True = connection request successful
     #       False = Connection request failed
     def RequestConnect(self) :
-        if isConnected :
+        if self.isConnected :
             onError(ERR_MULTIPLE_CONNECTION_REQUEST)
             return False
 
         connection_message = '?OTRv2?\nI want to start ' \
         'an OTR private conversation.\n See https://otr.' \
-        'cypherpunks.ca/ for more information.'
+        'cypherpunks.ca/ for more information.'.encode('UTF-8')
 
-        onSended(connection_message)
+        self.onSended(connection_message)
         return True
 
     # Reply to connection request
@@ -105,23 +105,28 @@ class OtrModule:
     #        False = connection not yet established
     def ReplyConnect(self, msg = None) :
         # Check stablity
-        if isConnected :
-            onError(ERR_MULTIPLE_CONNECTION_REQUEST)
+        if self.isConnected :
+            self.onError(ERR_MULTIPLE_CONNECTION_REQUEST)
             return False
 
         if msg is None :
             return False
 
         # get reply message
-        reply = context.handleConnectionRequest(msg)
+        reply = self.context.handleConnectionRequest(msg)
         if reply is None or reply is False :
             return False
         elif reply is True :
             return True
         
         # reply to other
-        onSended(reply)
-        return True
+        while not reply.empty():
+            self.onSended(reply.get())
+
+
+        if self.context.isConnected() :
+            return True
+        return False
 
 
     def IsConnected(self) :
@@ -134,10 +139,10 @@ class OtrModule:
     def RequestVerification(self, msgtyp) :
         # Check Stability
         if not isConnected :
-            onError(ERR_OTR_NOT_ESTABLISHED)
+            self.onError(ERR_OTR_NOT_ESTABLISHED)
             return 
         if msgtyp is not MSG_REQUEST_VERIFY and msgtyp is not MSG_REPLY_VERIFY :
-            onError(ERR_INVALID_PARAMETER)
+            self.onError(ERR_INVALID_PARAMETER)
             return
 
         # encrypt my key
@@ -147,7 +152,7 @@ class OtrModule:
 
         # send key
         self.SendMessage(key, msgtyp = MSG_TYPE_REQUEST_VERIFY)
-        return
+        return 
 
 
 
