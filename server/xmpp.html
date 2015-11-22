@@ -1,23 +1,13 @@
-
-
 <html>
-
 <body>
-
-  <h1>Counting rabbits</h1>
-
- 
-
-  <script>
-
-//Dependencies
+<script>
 var xmpp = require('node-xmpp');
 
 //Host configuration
 var host = "arewesecureyet.org";
 var port = "1492";
 var admin = "libiga@arewesecureyet.org";
-var adminPass = "wjdQygh;
+var adminPass = "wjdQygh";
 
 var connection = new xmpp.Client({
     jid: admin,
@@ -38,12 +28,6 @@ connection.send(iq);
 
 //End
 connection.end();
-
-  </script>
-
-  <h1>...Finished counting</h1>
-
+</script>
 </body>
-
 </html>
-
