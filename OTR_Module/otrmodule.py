@@ -20,9 +20,9 @@ class MessageBlock:
     def msg_to_message_block(msg, msgtype) :
         # convert msg to bytestring
         bytemsg = b''
-        if type(msg) == type(string) :
+        if type(msg) is str :
             bytemsg = msg.encode(encoding='UTF-8')
-        elif type(msg) == type(bytes) :
+        elif type(msg) is bytes :
             bytemsg = msg
         else :
             raise MessageBlockParsingError
@@ -53,7 +53,7 @@ class MessageBlock:
         msgblock = MessageBlock()
         msg.msg = bytestr[6:info[1]]
         msg.msgtype = info[0]
-
+        
         return msgblock
 
     def message_block_to_byte(self) :
@@ -113,18 +113,15 @@ class OtrModule:
             return False
 
         # get reply message
-        reply = self.context.handleConnectionRequest(msg)
-        if reply is None or reply is False :
-            return False
-        elif reply is True :
-            return True
-        
+        reply = self.context.handleConnectionRequest(msg)        
+
         # reply to other
         while not reply.empty():
             self.onSended(reply.get())
 
 
         if self.context.isConnected() :
+            self.isConnected = True
             return True
         return False
 
@@ -136,14 +133,15 @@ class OtrModule:
     #    communicate with HSM module to get encrypted key
     #    call SemdMessage
     #    encrypted key will
-    def RequestVerification(self, msgtyp) :
+    def RequestVerification(self, msgtyp=MSG_TYPE_REQUEST_VERIFY) :
         # Check Stability
-        if not isConnected :
+        if not self.isConnected :
             self.onError(ERR_OTR_NOT_ESTABLISHED)
             return 
-        if msgtyp is not MSG_REQUEST_VERIFY and msgtyp is not MSG_REPLY_VERIFY :
-            self.onError(ERR_INVALID_PARAMETER)
-            return
+        if msgtyp is not MSG_TYPE_REQUEST_VERIFY :
+            if msgtyp is not MSG_TYPE_REPLY_VERIFY :
+                self.onError(ERR_INVALID_PARAMETER)
+                return
 
         # encrypt my key
         key = self._encrypt_my_key()
@@ -171,32 +169,30 @@ class OtrModule:
     #        False: Message sended failed
     def SendMessage(self, msg, msgtyp = MSG_TYPE_ENCRYPTED) :
         # Check Stability
-        if (not isConnected) :
-            onError(ERR_OTR_NOT_ESTABLISHED)
+        if (not self.isConnected) :
+            self.onError(ERR_OTR_NOT_ESTABLISHED)
             return False
 
         
-        if (not isVerified) :
-            onError(ERR_NOT_VERIFIED_USER)
+        if msgtyp is MSG_TYPE_ENCRYPTED and (not self.isVerified) :
+            self.onError(ERR_NOT_VERIFIED_USER)
             return False
 
 
         # Create MessageBlcok
-        msgblock = msg_to_message_block(msg, msgtyp)
+        msgblock = MessageBlock.msg_to_message_block(msg, msgtyp)
         msg_bstring = msgblock.message_block_to_byte()
 
         # pass message to otr
         try :
-            sendqueue = context.handleSend(msg_bstring)
+            sendqueue = self.context.handleSend(msg_bstring)
         except Exception as e :
-            onError(ERR_WRONG_MESSAGE)
-            return False
-        if type(sendqueue) is not type (Queue.queue) :
+            self.onError(ERR_WRONG_MESSAGE)
             return False
 
         # Process Send Message by CallBack
         while not sendqueue.empty() :
-            onSended(sendqueue.get())
+            self.onSended(sendqueue.get())
 
         return True
 
@@ -213,20 +209,22 @@ class OtrModule:
     #        False: Message received failed
     def ReceiveMessage(self, msg) :
         # Check Stability
-        if (not isConnected) :
-            onError(ERR_OTR_NOT_ESTABLISHED)
-            return False
- 
-        # Get Queued Message
-        try :
-            recvqueue = context.handleReceive(msg) 
-        except Exception as e :
-            onError(ERR_WRONG_MESSAGE)
-            return False
+        if (not self.isConnected) :
+            self.onError(ERR_OTR_NOT_ESTABLISHED)
+            return False 
 
+        # Get Queued Message
+        #try :
+        #    recvqueue = self.context.handleReceived(msg) 
+        #except Exception as e :
+        #    self.onError(ERR_WRONG_MESSAGE)
+        #    return False
+       # Get Queued Message
+        recvqueue = self.context.handleReceived(msg) 
+       
         # Process Received Message by CallBack
         while not recvqueue.empty() : 
-            if not _handle_recv_(queuemessage.get()) :
+            if not self._handle_recv_(queuemessage.get()) :
                 return False
 
         return True
@@ -241,6 +239,7 @@ class OtrModule:
 
     def _verify_other_(self, key) :
         isVerified = True
+        print("verified")
         return True
     
     def _handle_recv_(self, decrypted_message) :
@@ -251,33 +250,33 @@ class OtrModule:
         try:
              msgblock = byte_to_message_block(decrypted_message)
         except MessageBlockParsingError :
-            onError(ERR_WRONG_MESSAGE)
+            self.onError(ERR_WRONG_MESSAGE)
             return False
-
+        print ("MSGTYP : %d" % msgtyp)
         # switch case with message type
         if msgtyp == MSG_TYPE_NOT_ENCRYPTED :
-            onError(ERR_MSG_NOT_ENCRYPTED)
+            self.onError(ERR_MSG_NOT_ENCRYPTED)
             return False
-
+        
         elif msgtyp == MSG_TYPE_ENCRYPTED :
-            if (not isVerified) :
-                onError(ERR_NOT_VERIFIED_USER)
+            if (not self.isVerified) :
+                self.onError(ERR_NOT_VERIFIED_USER)
                 return False
 
-            onReceived(msgblock.msg)
+            self.onReceived(msgblock.msg)
             return True
 
         elif msgtyp is MSG_TYPE_REQUEST_VERIFY :
-            result = _verify_other_(msgblock.msg)
-            RequestVerifyCation(MSG_TYPE_RECEIVE_VERIFY)
+            result = self._verify_other_(msgblock.msg)
+            self.RequestVerifyCation(MSG_TYPE_RECEIVE_VERIFY)
             return True
 
         elif msgtyp == MSG_TYPE_RECEIVE_VERIFY :
-            result = _verify_other_(msgblock.msg)
+            result = self._verify_other_(msgblock.msg)
             return True
 
         else :
-            onError(ERR_WRONG_MESSAGE)
+            self.onError(ERR_WRONG_MESSAGE)
             return False
 
         return False

@@ -32,18 +32,18 @@ class Context(potr.context.Context) :
 
     def handleReceived(self, message_byte_string) :
         recvs = self.receiveMessage(message_byte_string, self)
-
+        
         # iterate recvs to make queue
-
+        print(recvs)
+        return recvs
 
     def handleSend(self, message_byte_string) :
-        msgbuf = queue.Queue()
         self.sendMessage(0, message_byte_string, appdata=self)
         
         # dequeue injected message and make queue
-        outqueue = Queue.queue()
-        while not msgbuf.empty() :
-            outqueue.put(msgbuf.get())
+        outqueue = queue.Queue()
+        while not self.msgbuf.empty() :
+            outqueue.put(self.msgbuf.get())
 
         return outqueue
 
