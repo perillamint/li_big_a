@@ -3,12 +3,16 @@
 import struct
 
 import otrimplement
+import base64
+
+class MessageBlockParsingError(Exception):
+    pass
 
 # Type of Message
 MSG_TYPE_NOT_ENCRYPTED = 0
 MSG_TYPE_ENCRYPTED = 1
 MSG_TYPE_REQUEST_VERIFY = 2
-MSG_TYPE_RECEIVE_VERIFY = 3
+MSG_TYPE_REPLY_VERIFY = 3
 
 # Wrapper for Message
 class MessageBlock:
@@ -35,13 +39,17 @@ class MessageBlock:
         
         return msgblock
 
-    def byte_to_message_block(bytestr) :
+    def byte_to_message_block(b64str) :
+        bytestr = base64.b64decode(b64str)
+        if bytestr is None :
+            raise MessageBlockParsingError
+
         # check bytestr is at least 6bytes
         if len(bytestr) < 6 :
             raise MessageBlockParsingError
 
         # unpack info of MessageBlock(6bytes)
-        info = struct.unpack('!hi', bytestr[0:5])
+        info = struct.unpack('!hi', bytestr[0:6])
         if info[0] < 0 or info[0] > 3 :
             raise MessageBlockParsingError
         if info[1] < 0 or info[1] > 1024 :
@@ -51,14 +59,20 @@ class MessageBlock:
         
         # create message block
         msgblock = MessageBlock()
-        msg.msg = bytestr[6:info[1]]
-        msg.msgtype = info[0]
-        
+        msgblock.msg = bytestr[6:6 + info[1]]
+        msgblock.msgtype = info[0]
+ 
         return msgblock
 
     def message_block_to_byte(self) :
         # pack MessageBlock to byte
-        return struct.pack('!hi', self.msgtype, len(self.msg)) + self.msg
+        bytestr = struct.pack('!hi', self.msgtype, len(self.msg)) + self.msg
+ 
+        encoded = base64.b64encode(bytestr)
+        if encoded is None :
+            raise MessageBlockParsingError
+
+        return encoded
 
 
 
@@ -149,7 +163,7 @@ class OtrModule:
             return
 
         # send key
-        self.SendMessage(key, msgtyp = MSG_TYPE_REQUEST_VERIFY)
+        self.SendMessage(key, msgtyp)
         return 
 
 
@@ -173,8 +187,8 @@ class OtrModule:
             self.onError(ERR_OTR_NOT_ESTABLISHED)
             return False
 
-        
-        if msgtyp is MSG_TYPE_ENCRYPTED and (not self.isVerified) :
+       
+        if (msgtyp is MSG_TYPE_ENCRYPTED) and (not self.isVerified) :
             self.onError(ERR_NOT_VERIFIED_USER)
             return False
 
@@ -224,7 +238,8 @@ class OtrModule:
        
         # Process Received Message by CallBack
         while not recvqueue.empty() : 
-            if not self._handle_recv_(queuemessage.get()) :
+            result = self._handle_recv_(recvqueue.get())
+            if not result :
                 return False
 
         return True
@@ -238,7 +253,7 @@ class OtrModule:
         return b'this is not emplemented yet'
 
     def _verify_other_(self, key) :
-        isVerified = True
+        self.isVerified = True
         print("verified")
         return True
     
@@ -248,30 +263,29 @@ class OtrModule:
 
         # create message block
         try:
-             msgblock = byte_to_message_block(decrypted_message)
+             msgblock = MessageBlock.byte_to_message_block(decrypted_message)
         except MessageBlockParsingError :
             self.onError(ERR_WRONG_MESSAGE)
             return False
-        print ("MSGTYP : %d" % msgtyp)
+        
         # switch case with message type
-        if msgtyp == MSG_TYPE_NOT_ENCRYPTED :
+        if msgblock.msgtype == MSG_TYPE_NOT_ENCRYPTED :
             self.onError(ERR_MSG_NOT_ENCRYPTED)
             return False
         
-        elif msgtyp == MSG_TYPE_ENCRYPTED :
+        elif msgblock.msgtype == MSG_TYPE_ENCRYPTED :
             if (not self.isVerified) :
                 self.onError(ERR_NOT_VERIFIED_USER)
                 return False
-
             self.onReceived(msgblock.msg)
             return True
 
-        elif msgtyp is MSG_TYPE_REQUEST_VERIFY :
+        elif msgblock.msgtype is MSG_TYPE_REQUEST_VERIFY :
             result = self._verify_other_(msgblock.msg)
-            self.RequestVerifyCation(MSG_TYPE_RECEIVE_VERIFY)
+            self.RequestVerification(msgtyp=MSG_TYPE_REPLY_VERIFY)
             return True
 
-        elif msgtyp == MSG_TYPE_RECEIVE_VERIFY :
+        elif msgblock.msgtype == MSG_TYPE_REPLY_VERIFY :
             result = self._verify_other_(msgblock.msg)
             return True
 

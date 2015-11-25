@@ -28,12 +28,12 @@ def PrintError(msg):
     print(msg)
 
 def PrintAlice(msg) :
-    print("================= Alice =================")
+    print("================= Alice Received =================")
     print(msg)
 
 
 def PrintBob(msg) :
-    print("================= Bob =================")
+    print("================= Bob Received =================")
     print(msg)
 
 
@@ -76,14 +76,59 @@ otr1.RequestVerification()
 
 while not receive2.empty() :
     result = otr2.ReceiveMessage(receive2.get())
-    if result :
+    if not result :
         print("================== Failed Bob Receive ==================")
 
 
 while not receive1.empty() :
     result = otr1.ReceiveMessage(receive1.get())
-    if result :
+    if not result :
         print("================== Failed Alice Receive ==================")
+
+
+otr1.SendMessage("Hello")
+
+while not receive2.empty() :
+    result = otr2.ReceiveMessage(receive2.get())
+    if not result :
+        print("================== Failed Bob Receive ==================")
+
+
+while not receive1.empty() :
+    result = otr1.ReceiveMessage(receive1.get())
+    if not result :
+        print("================== Failed Alice Receive ==================")
+
+
+otr1.SendMessage("Can you hear this message?")
+
+while not receive2.empty() :
+    result = otr2.ReceiveMessage(receive2.get())
+    if not result :
+        print("================== Failed Bob Receive ==================")
+
+
+while not receive1.empty() :
+    result = otr1.ReceiveMessage(receive1.get())
+    if not result :
+        print("================== Failed Alice Receive ==================")
+
+
+otr2.SendMessage("Yes!!!")
+
+
+while not receive1.empty() :
+    result = otr1.ReceiveMessage(receive1.get())
+    if not result :
+        print("================== Failed Alice Receive ==================")
+
+while not receive2.empty() :
+    result = otr2.ReceiveMessage(receive2.get())
+    if not result :
+        print("================== Failed Bob Receive ==================")
+
+
+
 
 
 

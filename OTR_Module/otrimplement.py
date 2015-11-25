@@ -34,8 +34,9 @@ class Context(potr.context.Context) :
         recvs = self.receiveMessage(message_byte_string, self)
         
         # iterate recvs to make queue
-        print(recvs)
-        return recvs
+        outQueue = queue.Queue()
+        outQueue.put(recvs[0])
+        return outQueue
 
     def handleSend(self, message_byte_string) :
         self.sendMessage(0, message_byte_string, appdata=self)
