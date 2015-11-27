@@ -1,3 +1,13 @@
+﻿
+
+# Error codes
+ERR_UNSTABLE = 0
+ERR_SEND_WRONG = 1
+ERR_RECV_WRONG = 2
+ERR_VERIF_FAIL = 3
+
+
+
 
 
 # Manage OTR Sessions and Connect with other layer
@@ -7,7 +17,6 @@ class OTRManager :
     def CreateOTR(self, jid) :
         # Create OTR session
         # TODO
-
 
         # Call user layer OTR creation callback
         # TODO
@@ -48,7 +57,7 @@ class OTRManager :
             session.HandleConnection(message)
         elif not session.isVerified() :
             session.HandleVerification(message)
-        else
+        else :
             session.ReceiveMessage(message)
 
         return
@@ -68,7 +77,8 @@ class OTRManager :
 
         return
 
-
+    def Error(jid, errorcode) :
+        return
 
 
 
