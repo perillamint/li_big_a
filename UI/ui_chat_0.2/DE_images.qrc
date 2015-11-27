@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/">
+        <file>DE_images/blue_image.jpg</file>
+        <file>DE_images/blue2.jpg</file>
+        <file>DE_images/camera 32x32.png</file>
+        <file>DE_images/config_32x32.png</file>
+        <file>DE_images/config2_32x32.png</file>
+        <file>DE_images/file 32x32.png</file>
+        <file>DE_images/folder_16x16.png</file>
+        <file>DE_images/folder_add_32x32.png</file>
+        <file>DE_images/icon_48x48.png</file>
+        <file>DE_images/icon_64x64.png</file>
+        <file>DE_images/icon_128x128.png</file>
+        <file>DE_images/icon_256x256.png</file>
+        <file>DE_images/lock_32x32.png</file>
+        <file>DE_images/phone_call 32x32.png</file>
+        <file>DE_images/reposettings_32x32.png</file>
+        <file>DE_images/search_magifier 32x32.png</file>
+        <file>DE_images/SourceTreeLogo.ico</file>
+        <file>DE_images/transparent16x16.png</file>
+        <file>DE_images/update_32x32.png</file>
+    </qresource>
+</RCC>
