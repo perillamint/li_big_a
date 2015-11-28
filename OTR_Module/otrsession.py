@@ -3,29 +3,146 @@ import base64
 
 import otrmanager
 
-import networkmanager
-import usermanager
+#import networkmanager
+#import usermanager
 
-MSG_TYPE_ENCRYPTED = 0
-MSG_TYPE_VERIFY_A = 1
-MSG_TYPE_VERIFY_B = 2
+# by wrapping with message block, we can add some control message
+
+MSG_TYPE_NONE = 0
+MSG_TYPE_ENCRYPTED = 1
+MSG_TYPE_VERIFY = 2
+
 
 class MessageBlock :
     def __init__(self):
         self.msg = ''
-        self.typ = MSG_TYPE_ENCRYPTED
-
+        self.typ = MSG_TYPE_NONE
 
     def CreateFromText(message, messagetype) :
-        pass
+        messageblock = MessageBlock()
+        if type(message) is str :
+            messageblock.msg = message.encode(encoding='UTF-8')
+        elif type(message) is bytes :
+            messageblock.msg = message
+        else :
+            return None
+
+        if not (messagetype in range(1, 3, 1)) :
+            return None
+
+        messageblock.typ = messagetype
+
+        return messageblock
+
     def CreateFromBytes(bytestring) :
-        pass
+        if not (type(bytestring) is bytes) :
+            return None
+
+        # decode
+        serialized = base64.b64decode(bytestring)
+        if len(deserialized) < 6 :
+            return None
+
+        msgtyp = int.from_bytes(serialized[0:2], byteorder='little')
+        msglength = int.from_bytes(serialized[2:6], byteorder='little')
+        message = serialized[6:len(serialized)]
+        
+        if not (msgtyp in range(1, 3, 1)) :
+            return None
+
+        if not (len(msgcontext) is msglength) :
+            return None
+
+        
+        if len(msgcontext) > 1024 :
+            return None
+
+        # create message block
+        messageblock = MessageBlock()
+        messageblock.msg = message
+        messageblock.typ = msgtyp
+
+
+        return messageblock
+
+
     def ExportToBytes(self) :
-        pass
+        
+        bytes_typ = bytes([self.typ])
+        bytes_len = bytes([len(self.msg)])
+        
+        # check type
+        if not (len(bytes_typ) is 1) :
+            return None
+        
+        # check length
+        if (len(bytes_len) <= 0) :
+            return None
+        elif (len(bytes_len) > 4) :
+            return None
+        elif (len(bytes_len) is 4) :
+            # padding
+            do()
+
+        # check message
+        if len(self.msg) > 1024 :
+            return None
+        
+        #serialize
+        serialized = bytes_typ + bytes_len + self.msg
+        
+        #encode
+        b64encoded = base64.b64encode(serialized)
+
+        return b64encoded
+
+
     def ExportToText(self) :
-        pass
+        if not (self.typ in range(1, 3, 1)) :
+            return None
+
+        return self.msg
+
     def GetType(self) :
-        pass
+        return self.typ
+
+
+# return ecrypted message on bytes
+def __EncryptMessageOf__(message, typ) :
+    # Ascii guard plaintext
+    guarded = base64.b64encode(message)
+    if guarded is None :
+        return None
+
+    # Create MessageBlock
+    messageblock = MessageBlock.CreateFromText(message, typ)
+    if messageblock is None :
+        return None
+
+    return messageblock.ExportToBytes()
+
+# return decrypted message and its type
+def __DecryptMessageOf__(message, typ) :
+
+    # Create MessageBlock
+    messageblock = MessageBlock.CreateFromBytes(message)
+    if messageblock is None :
+        return None
+        
+    # check messageblock has non-ascii-bytes
+    # TODO
+
+    # check messageblock type
+    if not (messageblock.typ is typ) :
+        return None
+
+    # decrypt Ascii guard
+    unguarded = base64.b64decode(messageblock.ExportToPlainText())
+    if unguarded is None :
+        return None
+
+    return unguarded
+
 
 
 class OTRsession :
@@ -49,29 +166,22 @@ class OTRsession :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
 
-        # Ascii guard plaintext
-        guarded = base64.b64encode(plaintext)
-        if guarded is None :
+        # encrypt message
+        sending = __EncryptMessageOf__(plaintext, MSG_TYPE_ENCRYPTED)
+        if sending is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
             return
-
-        # Create MessageBlock
-        messageblock = MessageBlock.CreateFromText(message, MSG_TYPE_ENCRYPTED)
-        if messageblock is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
-            return
-
+            
         # encrypt with otr
-        messagequeue = self.otrContext.
+        messagequeue = self.otrContext.handleSend(sending)
         if messagequeue is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
             return
 
-        
         # send to network manager
         while not messagequeue.empty():
-           networkmanager.NetManager().SendMessage(self.jid, messagequeue.get())
-
+#            networkmanager.NetManager().SendMessage(self.jid, messagequeue.get())
+            print("sending : %s" % messagequeue.get())
 
         return
         
@@ -80,59 +190,54 @@ class OTRsession :
         if self.__CheckStable__(True, True) :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
+
+        # check encrypted has non-ascii-bytes
+        # TODO
         
         # decrypt with otr
-        received = self.otrContext.
+        received = self.otrContext.handleReceived(encrypted)
         if received is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
-        # Create MessageBlock
-        messageblock = MessageBlock.CreateFromBytes(received)
-        if messageblock is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
-            return
-
-        if not (messageblock.typ is MSG_TYPE_ENCRYPTED) :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
-            return
-
-        # decrypt Ascii guard
-        unguarded = base64.b64decode(messageblock.ExportToPlainText())
+        # decrypt message
+        unguarded = __DecryptMessageOf__(received, MSG_TYPE_ENCRYPTED)
         if unguarded is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
-        
-        # send to user manager
-        usermanager.UserManager().OnReceive(self.jid, unguarded)
-
-
+        # send only message to user manager
+#        usermanager.UserManager().OnReceive(self.jid, unguarded)
+        print("receiving : %s" % unguarded)
 
         return
 
     def StartConnection(self) :
         # create connection message
-        connection_message = '?OTRv2?\nI want to start ' \
-            'an OTR private conversation.\n See https://otr.' \
-            'cypherpunks.ca/ for more information.'.encode('UTF-8')
+        connection_message = getDefaultQueryMessage()
 
         # send to network manager
-        networkmanager.NetManager().SendMessage(self.jid, connection_message)
+#        networkmanager.NetManager().SendMessage(self.jid, connection_message)
+        print("sending : %s" % connection_message)
 
         return
 
     def HandleConnection(self, message) :
         # decrypt with otrcontext
-        replyqueue = self.otrContext.
+        replyqueue = self.otrContext.handleConnectionRequest(message)
         if self.context.isConnected() :
             self.isOTRconnected = True
+            if self.isStarter :
+                self.StartVerification()
+            return
         elif replyqueue is None :
             return
         
         # send to network manager
         while not replyqueue.empty() :
-           networkmanager.NetManager().SendMessage(self.jid, replyqueue.get())
+#            networkmanager.NetManager().SendMessage(self.jid, replyqueue.get())
+            print("sending : %s" % messagequeue.get())
+        
 
         return
 
@@ -140,30 +245,31 @@ class OTRsession :
         if self.__CheckStable__(True, False) :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
+        
+        # get verification key
+        keyseed = self.__GetVerificationKeySeed__()
+        otrmanager.OTRManager().GetVerifKeyOf(self.jid, keyseed)
 
-        verificationkey = self.__GetVerificationKey__()
+        return
+        
 
-        # Ascii guard plaintext
-        guarded = base64.b64encode(verificationkey)
-        if guarded is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
-            return
-
-        # Create MessageBlock
-        messageblock = MessageBlock.CreateFromText(message, MSG_TYPE_VERIFY_A)
-        if messageblock is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
+    def OnVerificationKeyGet(self, key) :
+        # encrypt message
+        sending = __EncryptMessageOf__(key, MSG_TYPE_VERIFY)
+        if sending is None :
+            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
         # encrypt with otr
-        messagequeue = self.otrContext.
+        messagequeue = self.otrContext.handleSend(sending)
         if messagequeue is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
+            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
         # send to network manager
-        while not messagequeue.empty() :
-           networkmanager.NetManager().SendMessage(self.jid, messagequeue.get())
+        while not messagequeue.empty():
+#            networkmanager.NetManager().SendMessage(self.jid, messagequeue.get())
+            print("sending : %s" % messagequeue.get())
 
         return
 
@@ -172,60 +278,33 @@ class OTRsession :
             otrmanager.OTRManager().Error(jid, otrmanager.ERR_UNSTABLE)
             return
         
-       # decrypt with otr
-        received = self.otrContext.
+        # check encrypted has non-ascii-bytes
+        # TODO
+
+        # decrypt with otr
+        received = self.otrContext.handleReceived(message)
         if received is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
-        # Create MessageBlock
-        messageblock = MessageBlock.CreateFromBytes(received)
-        if messageblock is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
-            return
-
-        
-        if not (messageblock.typ is MSG_TYPE_VERIFY_A or messageblock.typ is MSG_TYPE_VERIFY_B) :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
-            return
-
         # decrypt Ascii guard
-        unguarded = base64.b64decode(messageblock.ExportToPlainText())
+        unguarded = __DecryptMessageOf__(received, MSG_TYPE_VERIFY)
         if unguarded is None :
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
         # verify other
-        key = networkmanager.NetManager().RequestGPGKey(self.jid)
-        if not self.__Verify__(key, unguarded) :
+        key = otrmanager.OTRManager().GetGPGKeyOf(self.jid)
+        if not (self.__Verify__(key, unguarded)):
             otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
+        # set verfication flag
+        self.isGPGverified = True
 
-        # if Message Type is A, you need to send your key
-        verificationkey = self.__GetVerificationKey__()
-
-        # Ascii guard plaintext
-        guarded = base64.b64encode(verificationkey)
-        if guarded is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
-            return
-
-        # Create MessageBlock
-        messageblock = MessageBlock.CreateFromText(message, MSG_TYPE_VERIFY_B)
-        if messageblock is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
-            return
-
-        # encrypt with otr
-        messagequeue = self.otrContext.
-        if messagequeue is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
-            return
-
-        # send to network manager
-        while not messagequeue.empty() :
-           networkmanager.NetManager().SendMessage(self.jid, messagequeue.get())
+        # if user not connection starter request
+        if not self.isStarter :
+            self.StartVerification()
 
         return
 
@@ -246,11 +325,17 @@ class OTRsession :
         return result
 
 
-    def __GetVerificationKey__(self) :
+
+    def __GetVerificationKeySeed__(self) :
+
+
         return "Not Implemented"
 
     def __Verify__(self, key, msg) :
+
+
         return True
+
 
 
 

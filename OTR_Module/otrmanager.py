@@ -1,6 +1,4 @@
-﻿
-
-# Error codes
+﻿# Error codes
 ERR_UNSTABLE = 0
 ERR_SEND_WRONG = 1
 ERR_RECV_WRONG = 2
@@ -13,6 +11,9 @@ ERR_VERIF_FAIL = 3
 # Manage OTR Sessions and Connect with other layer
 # Implemented as singleton
 class OTRManager :
+    def __init__(self) :
+        self.otrsessions = {}
+        self.otrerrors = {}
 
     def CreateOTR(self, jid) :
         # Create OTR session
@@ -33,10 +34,12 @@ class OTRManager :
     # called from user layer
     # call when user send message(plain text)
     def SendMessage(self, jid, message) :
-        session = self.otrsessions[jid]
-        if session is None :
+        if not (jid in self.otrsessions.keys()) :
             # TODO : user layer to destroy session
             return
+
+        # select session
+        session = self.otrsessions[jid]
 
         # handle send message
         session.SendMessage(message)
@@ -47,11 +50,13 @@ class OTRManager :
     # called from network layer
     # call when user receive message(otr encrypted)
     def ReceiveMessage(self, jid, message) :
-        session = self.otrsessions[jid]
-        if session is None :
+        if not (jid in self.otrsessions.keys()) :
             # TODO : create new OTR session
-            return
-
+            createNewOTRSession()
+            
+        # select session
+        session = self.otrsessions[jid]
+        
         # handle received message
         if not session.isConnected() :
             session.HandleConnection(message)
@@ -72,12 +77,33 @@ class OTRManager :
 
         # destroy
         # TODO
-                    
 
 
         return
 
-    def Error(jid, errorcode) :
+    def GetGPGKeyOf(self, jid) :
+        return "Not Implemented"
+
+    def GetVerifKeyOf(self, jid, keyseed) :
+
+        # send message to hsm
+        # TODO
+        OnGetVerifKeyOf(jid, keyseed)
+
+        return
+
+    def OnGetVerifKeyOf(self, jid, key) :
+        if not (jid in self.otrsessions.keys()) :
+            return
+
+        # send session key
+        session = self.otrsessions[jid]
+        session.OnVerificationKeyGet(key)
+
+        return
+
+    def Error(self, jid, errorcode) :
+
         return
 
 
