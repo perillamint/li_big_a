@@ -1,6 +1,12 @@
 ﻿
 import otrsession
 
+import gnupg
+
+import pycurl
+from io import BytesIO
+
+
 class Singleton:
 
     def __init__(self, decorated):
@@ -42,14 +48,9 @@ class OTRManager :
         if jid in self.otrsessions.keys() :
             return
 
-        self.otrsessions[jid] = otrsession.OTRsession(jid, True)
-
-        
+        self.otrsessions[jid] = otrsession.OTRsession(jid, True) 
 
         # Call user layer OTR creation callback
-        # TODO
-
-        # Call network layer OTR creation callback
         # TODO
 
         # SendConnectionMessage
@@ -107,13 +108,47 @@ class OTRManager :
         return
 
     def GetGPGKeyOf(self, jid) :
-        return "Not Implemented"
+        if type(jid) is str :
+            jid = jid.encode('UTF-8')
+        
+        jid_parsed = jid.replace(b'@', b'_at_')
+        jid_parsed = jid_parsed.replace(b'.', b'_dot_')
+        jid_url = b'http://laurelin.arewesecureyet.org/keys/' + jid_parsed + b'.asc'
+       
+        # connect at reserved server
+        buff = BytesIO()
+        c = pycurl.Curl()
+        c.setopt(c.URL, jid_url)
+        c.setopt(c.WRITEDATA, buff)
+        c.perform()
+        c.close()
+	
+        return buff.getvalue()
 
+
+    # signing
     def GetVerifKeyOf(self, jid, keyseed) :
-
         # send message to hsm
         # TODO
-        self.OnGetVerifKeyOf(jid, keyseed)
+
+        # temporary use in-computer signing
+        keypath = '/home/poong/python/lba_otr/samplekeys/'
+        if(jid == 'one@arewesecureyet.org') :
+            keypath = keypath + 'two@arewesecureyet.org.asc'
+        elif(jid == 'two@arewesecureyet.org') :
+            keypath = keypath + 'one@arewesecureyet.org.asc'
+        f = open(keypath, 'r')
+        readed = f.read()
+        f.close()
+
+
+        gpg = gnupg.GPG(gnupghome='keys')
+        imported = gpg.import_keys(readed)
+        
+        verifkey = gpg.sign(keyseed, keyid=imported.results[0]['fingerprint'], passphrase='libiga')
+       
+        # call when verification key is signed
+        self.OnGetVerifKeyOf(jid, verifkey.data)
 
         return
 

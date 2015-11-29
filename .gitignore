@@ -85,6 +85,6 @@ fpr-test/src/fpr-test
 
 # Otrmodule cache
 OTR_Module/__pycache__/
-
+OTR_Module/keys/
 
 

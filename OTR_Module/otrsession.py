@@ -1,6 +1,7 @@
 ﻿
 import base64
 import struct
+import gnupg
 
 import otrmanager
 import otrimplement
@@ -121,7 +122,7 @@ def __DecryptMessageOf__(message, typ) :
     # TODO
 
     # check messageblock type
-    if not (messageblock.typ is typ) :
+    if not (messageblock.typ == typ) :
         return None
 
     text = messageblock.ExportToText()
@@ -325,12 +326,15 @@ class OTRsession :
     def __GetVerificationKeySeed__(self) :
 
 
-        return "This is Key Seed"
+        return "KeySeed"
 
     def __Verify__(self, key, msg) :
+        # verify by gnupg
+        gpg = gnupg.GPG(gnupghome='keys')
+        import_result = gpg.import_keys(key)
+        verify = gpg.verify(msg)
 
-
-        return True
+        return verify.valid
 
 
 
