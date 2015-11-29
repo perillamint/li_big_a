@@ -1,4 +1,27 @@
-﻿# Error codes
+﻿
+import otrsession
+
+class Singleton:
+
+    def __init__(self, decorated):
+        self._decorated = decorated
+
+    def Instance(self):
+        try:
+            return self._instance
+        except AttributeError:
+            self._instance = self._decorated()
+            return self._instance
+
+    def __call__(self):
+        raise TypeError('Singletons must be accessed through `Instance()`.')
+
+    def __instancecheck__(self, inst):
+        return isinstance(inst, self._decorated)
+
+
+
+# Error codes
 ERR_UNSTABLE = 0
 ERR_SEND_WRONG = 1
 ERR_RECV_WRONG = 2
@@ -6,10 +29,9 @@ ERR_VERIF_FAIL = 3
 
 
 
-
-
 # Manage OTR Sessions and Connect with other layer
 # Implemented as singleton
+@Singleton
 class OTRManager :
     def __init__(self) :
         self.otrsessions = {}
@@ -17,7 +39,12 @@ class OTRManager :
 
     def CreateOTR(self, jid) :
         # Create OTR session
-        # TODO
+        if jid in self.otrsessions.keys() :
+            return
+
+        self.otrsessions[jid] = otrsession.OTRsession()
+
+        
 
         # Call user layer OTR creation callback
         # TODO
@@ -26,7 +53,7 @@ class OTRManager :
         # TODO
 
         # SendConnectionMessage
-        # TODO
+        self.otrsessions[jid].StartConnection()
 
         return
 
@@ -51,8 +78,7 @@ class OTRManager :
     # call when user receive message(otr encrypted)
     def ReceiveMessage(self, jid, message) :
         if not (jid in self.otrsessions.keys()) :
-            # TODO : create new OTR session
-            createNewOTRSession()
+            self.otrsessions[jid] = otrsession.OTRsession()
             
         # select session
         session = self.otrsessions[jid]
@@ -76,8 +102,7 @@ class OTRManager :
         # TODO
 
         # destroy
-        # TODO
-
+        del self.otrsessions[jid]
 
         return
 
