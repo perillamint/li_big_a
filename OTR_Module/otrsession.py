@@ -163,19 +163,19 @@ class OTRsession :
     # send to other
     def SendMessage(self, plaintext) :
         if self.__CheckStable__(True, True) :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
 
         # encrypt message
         sending = __EncryptMessageOf__(plaintext, MSG_TYPE_ENCRYPTED)
         if sending is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_SEND_WRONG)
             return
             
         # encrypt with otr
         messagequeue = self.otrContext.handleSend(sending)
         if messagequeue is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_SEND_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_SEND_WRONG)
             return
 
         # send to network manager
@@ -188,7 +188,7 @@ class OTRsession :
     # recv from other
     def ReceiveMessage(self, encrypted) :
         if self.__CheckStable__(True, True) :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
 
         # check encrypted has non-ascii-bytes
@@ -197,13 +197,13 @@ class OTRsession :
         # decrypt with otr
         received = self.otrContext.handleReceived(encrypted)
         if received is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
         # decrypt message
         unguarded = __DecryptMessageOf__(received, MSG_TYPE_ENCRYPTED)
         if unguarded is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
         # send only message to user manager
@@ -243,12 +243,12 @@ class OTRsession :
 
     def StartVerification(self) :
         if self.__CheckStable__(True, False) :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
             return
         
         # get verification key
         keyseed = self.__GetVerificationKeySeed__()
-        otrmanager.OTRManager().GetVerifKeyOf(self.jid, keyseed)
+        otrmanager.OTRManager.Instance().GetVerifKeyOf(self.jid, keyseed)
 
         return
         
@@ -257,13 +257,13 @@ class OTRsession :
         # encrypt message
         sending = __EncryptMessageOf__(key, MSG_TYPE_VERIFY)
         if sending is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
         # encrypt with otr
         messagequeue = self.otrContext.handleSend(sending)
         if messagequeue is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
         # send to network manager
@@ -275,7 +275,7 @@ class OTRsession :
 
     def HandleVerification(self, message) :
         if self.__CheckStable__(True, False) :
-            otrmanager.OTRManager().Error(jid, otrmanager.ERR_UNSTABLE)
+            otrmanager.OTRManager.Instance().Error(jid, otrmanager.ERR_UNSTABLE)
             return
         
         # check encrypted has non-ascii-bytes
@@ -284,19 +284,19 @@ class OTRsession :
         # decrypt with otr
         received = self.otrContext.handleReceived(message)
         if received is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
         # decrypt Ascii guard
         unguarded = __DecryptMessageOf__(received, MSG_TYPE_VERIFY)
         if unguarded is None :
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_RECV_WRONG)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
 
         # verify other
-        key = otrmanager.OTRManager().GetGPGKeyOf(self.jid)
+        key = otrmanager.OTRManager.Instance().GetGPGKeyOf(self.jid)
         if not (self.__Verify__(key, unguarded)):
-            otrmanager.OTRManager().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_VERIF_FAIL)
             return
 
         # set verfication flag
