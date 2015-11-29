@@ -113,7 +113,7 @@ class OTRManager :
 
         # send message to hsm
         # TODO
-        OnGetVerifKeyOf(jid, keyseed)
+        self.OnGetVerifKeyOf(jid, keyseed)
 
         return
 
@@ -128,7 +128,7 @@ class OTRManager :
         return
 
     def Error(self, jid, errorcode) :
-
+        print("Errored : %d" % errorcode)
         return
 
 

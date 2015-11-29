@@ -32,12 +32,16 @@ class Context(potr.context.Context) :
 
     # return bytes
     def handleReceived(self, message_byte_string) :
-        recvs = self.receiveMessage(message_byte_string, self)
         
+        try :
+            recvs = self.receiveMessage(message_byte_string, self)
+        except Exception as e :
+            print("Error occured")
+            return False
+
+
         # check message to be sent to user
-        if not (len(recvs) is 2) :
-            return None
-        if not (recvs[0] is None) :
+        if recvs[0] is None :
             return None
 
         return recvs[0]
@@ -45,10 +49,6 @@ class Context(potr.context.Context) :
     # return queue
     def handleSend(self, message_byte_string) :
         self.sendMessage(0, message_byte_string, appdata=self)
-
-        # check message to be sent to other
-        if len(self.msgbuf) is 0 :
-            return None
 
         # dequeue injected message and make queue
         outqueue = queue.Queue()
@@ -62,11 +62,7 @@ class Context(potr.context.Context) :
         
     # return queue
     def handleConnectionRequest(self, message_byte_string) :
-        self.sendMessage(0, message_byte_string, appdata=self)
-
-        # check message to be sent to other
-        if len(self.msgbuf) is 0 :
-            return None
+        self.receiveMessage(message_byte_string, appdata=self)
 
         # dequeue injected message and make queue
         outqueue = queue.Queue()
