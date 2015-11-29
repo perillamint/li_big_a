@@ -2,6 +2,7 @@
 import base64
 
 import otrmanager
+import otrimplement
 
 #import networkmanager
 #import usermanager
@@ -149,9 +150,9 @@ class OTRsession :
     def __init__(self, jid_other, starter) :
         self.jid = jid_other
         self.isStarter = starter
-        self.isOTRconnected = false
-        self.isGPGverified = false
-        self.otrContext = None
+        self.isOTRconnected = False
+        self.isGPGverified = False
+        self.otrContext = otrimplement.Context(jid_other)
 
 
     def isConnected(self) :
@@ -214,7 +215,7 @@ class OTRsession :
 
     def StartConnection(self) :
         # create connection message
-        connection_message = getDefaultQueryMessage()
+        connection_message = self.otrContext.getDefaultQueryMessage()
 
         # send to network manager
 #        networkmanager.NetManager().SendMessage(self.jid, connection_message)

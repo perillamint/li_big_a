@@ -42,7 +42,7 @@ class OTRManager :
         if jid in self.otrsessions.keys() :
             return
 
-        self.otrsessions[jid] = otrsession.OTRsession()
+        self.otrsessions[jid] = otrsession.OTRsession(jid, True)
 
         
 
@@ -78,7 +78,7 @@ class OTRManager :
     # call when user receive message(otr encrypted)
     def ReceiveMessage(self, jid, message) :
         if not (jid in self.otrsessions.keys()) :
-            self.otrsessions[jid] = otrsession.OTRsession()
+            self.otrsessions[jid] = otrsession.OTRsession(jid, False)
             
         # select session
         session = self.otrsessions[jid]

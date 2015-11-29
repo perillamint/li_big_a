@@ -15,8 +15,8 @@ PROTOCOL = 'xmpp'
 MMS = 1024
 
 class Context(potr.context.Context) :
-    def __init__(self) :
-        super(Context, self).__init__(Account(), 'peer')
+    def __init__(self, jid) :
+        super(Context, self).__init__(Account('user'), jid)
         self.msgbuf = queue.Queue()
 
 
@@ -88,7 +88,7 @@ class Account(potr.context.Account):
 
     def __init__(self, jid):
         global PROTOCOL, MMS
-        super(MyAccount, self).__init__(jid, PROTOCOL, MMS)
+        super(Account, self).__init__(jid, PROTOCOL, MMS)
 
     # auto generate random private key
     def loadPrivkey(self):
