@@ -282,8 +282,10 @@ class OTRsession :
 
         # decrypt with otr
         received = self.otrContext.handleReceived(message)
-        if received is None :
+        if received is False :
             otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
+            return
+        elif received is None :
             return
 
         # decrypt Ascii guard
