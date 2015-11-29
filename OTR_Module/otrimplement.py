@@ -36,7 +36,6 @@ class Context(potr.context.Context) :
         try :
             recvs = self.receiveMessage(message_byte_string, self)
         except Exception as e :
-            print("Error occured")
             return False
 
 

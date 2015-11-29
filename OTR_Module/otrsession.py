@@ -2,6 +2,7 @@
 import base64
 import struct
 import gnupg
+import hashlib
 
 import otrmanager
 import otrimplement
@@ -218,7 +219,7 @@ class OTRsession :
         # decrypt with otrcontext
         replyqueue = self.otrContext.handleConnectionRequest(message)
         if self.otrContext.isConnected() :
-            print("    connection with %s succedd" % self.jid)
+            print("connection with %s succedd" % self.jid)
             self.isOTRconnected = True
         elif replyqueue is None : 
             otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE) 
@@ -248,6 +249,10 @@ class OTRsession :
         
 
     def OnVerificationKeyGet(self, key) :
+        if self.__CheckStable__(True, False) :
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            return
+
         # encrypt message
         sending = __EncryptMessageOf__(key, MSG_TYPE_VERIFY)
         if sending is None :
@@ -280,15 +285,12 @@ class OTRsession :
         if received is None :
             otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
-        print("received : %s " % received)
 
         # decrypt Ascii guard
         unguarded = __DecryptMessageOf__(received, MSG_TYPE_VERIFY)
         if unguarded is None :
             otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_RECV_WRONG)
             return
-        print("unguarded : %s " % unguarded)
-
 
         # verify other
         key = otrmanager.OTRManager.Instance().GetGPGKeyOf(self.jid)
@@ -324,11 +326,20 @@ class OTRsession :
 
 
     def __GetVerificationKeySeed__(self) :
+        if self.__CheckStable__(True, False) :
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            return
 
+        tmpkeyseed = self.otrContext.crypto.sessionId
+        keyseed = hashlib.sha256(tmpkeyseed).hexdigest()
 
-        return "KeySeed"
+        return keyseed
 
     def __Verify__(self, key, msg) :
+        if self.__CheckStable__(True, False) :
+            otrmanager.OTRManager.Instance().Error(self.jid, otrmanager.ERR_UNSTABLE)
+            return
+
         # verify by gnupg
         gpg = gnupg.GPG(gnupghome='keys')
         import_result = gpg.import_keys(key)
