@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>553</width>
-    <height>707</height>
+    <height>710</height>
    </rect>
   </property>
   <property name="font">
@@ -22,7 +22,11 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Secure Chat by li_big_a</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="DH_images.qrc">
+    <normaloff>:/DH_images/lock_32x32.png</normaloff>:/DH_images/lock_32x32.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QFrame" name="frame">
@@ -35,9 +39,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">QFrame{
-background-color:rgb(7, 210, 255)
-}</string>
+     <string notr="true">background-image:url(:/DH_images/blue_image.jpg)</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -201,7 +203,9 @@ font: italic 12pt &quot;Comic Sans MS&quot;;
      <property name="styleSheet">
       <string notr="true">QTextEdit{
 font: 12pt &quot;-윤디자인웹돋움&quot;;
-}</string>
+background-image:url(:/DH_images/transparent16x16.png);
+}
+</string>
      </property>
      <property name="html">
       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -222,20 +226,27 @@ p, li { white-space: pre-wrap; }
      </property>
      <property name="dateTime">
       <datetime>
-       <hour>0</hour>
-       <minute>0</minute>
+       <hour>13</hour>
+       <minute>13</minute>
        <second>0</second>
-       <year>1996</year>
-       <month>1</month>
+       <year>2015</year>
+       <month>12</month>
        <day>1</day>
       </datetime>
      </property>
      <property name="date">
       <date>
-       <year>1996</year>
-       <month>1</month>
+       <year>2015</year>
+       <month>12</month>
        <day>1</day>
       </date>
+     </property>
+     <property name="time">
+      <time>
+       <hour>13</hour>
+       <minute>13</minute>
+       <second>0</second>
+      </time>
      </property>
      <property name="calendarPopup">
       <bool>false</bool>
@@ -251,36 +262,13 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color:rgb(76, 152, 173)</string>
+      <string notr="true">background-image:url(:/DH_images/transparent16x16.png)</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
-     </property>
-     <zorder>input_password</zorder>
-    </widget>
-    <widget class="QTextEdit" name="textEdit_2">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>170</y>
-       <width>431</width>
-       <height>91</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QTextEdit{
-background-color:rgb(35, 255, 182)
-}</string>
-     </property>
-     <property name="html">
-      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Gulim'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:48pt;&quot;&gt;Chatting App&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -292,8 +280,11 @@ p, li { white-space: pre-wrap; }
        <height>12</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(:/DH_images/transparent16x16.png)</string>
+     </property>
      <property name="text">
-      <string>TextLabel</string>
+      <string/>
      </property>
     </widget>
     <widget class="QLabel" name="label_2">
@@ -305,8 +296,53 @@ p, li { white-space: pre-wrap; }
        <height>12</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(:/DH_images/transparent16x16.png)</string>
+     </property>
      <property name="text">
-      <string>TextLabel</string>
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>71</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-image:url(:/DH_images/finger_print.png)</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>150</y>
+       <width>431</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>47</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(:/DH_images/transparent16x16.png)</string>
+     </property>
+     <property name="text">
+      <string>Secure Chat</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
     <zorder>frame_2</zorder>
@@ -318,13 +354,16 @@ p, li { white-space: pre-wrap; }
     <zorder>btn_register</zorder>
     <zorder>text_register</zorder>
     <zorder>timeEdit</zorder>
-    <zorder>textEdit_2</zorder>
     <zorder>label</zorder>
     <zorder>label_2</zorder>
+    <zorder>label_3</zorder>
+    <zorder>label_4</zorder>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="DH_images.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -2,6 +2,7 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
+import login_session
 import login
 
 form_class = uic.loadUiType("login_session.ui")[0]

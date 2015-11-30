@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>DH_images/blue_image.jpg</file>
+        <file>DH_images/blue2.jpg</file>
+        <file>DH_images/camera 32x32.png</file>
+        <file>DH_images/config_32x32.png</file>
+        <file>DH_images/config2_32x32.png</file>
+        <file>DH_images/file 32x32.png</file>
+        <file>DH_images/folder_16x16.png</file>
+        <file>DH_images/folder_add_32x32.png</file>
+        <file>DH_images/icon_48x48.png</file>
+        <file>DH_images/icon_64x64.png</file>
+        <file>DH_images/icon_128x128.png</file>
+        <file>DH_images/icon_256x256.png</file>
+        <file>DH_images/lock_32x32.png</file>
+        <file>DH_images/phone_call 32x32.png</file>
+        <file>DH_images/reposettings_32x32.png</file>
+        <file>DH_images/search_magifier 32x32.png</file>
+        <file>DH_images/SourceTreeLogo.ico</file>
+        <file>DH_images/transparent16x16.png</file>
+        <file>DH_images/update_32x32.png</file>
+        <file>DH_images/finger_print.png</file>
+    </qresource>
+</RCC>
