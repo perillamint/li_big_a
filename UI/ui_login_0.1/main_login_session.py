@@ -2,6 +2,7 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
+import login
 
 form_class = uic.loadUiType("login_session.ui")[0]
 
@@ -14,10 +15,16 @@ class MyWindow(QMainWindow, form_class):
     def btn_clicked(self):
         ID = self.input_ID.text()
         password = self.input_password.text()
-
-        self.label.setText(ID)
-        self.label_2.setText(password)
-
+	
+	xmpp = connectClient(ID,password)
+	xmpp.register_plugin('xep_0030')
+	xmpp.register_plugin('xep_0004')
+	xmpp.register_plugin('xep_0060')
+	xmpp.register_plugin('xep_0199')
+	
+	xmpp.connect()
+	xmpp.process()
+	
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = MyWindow()
