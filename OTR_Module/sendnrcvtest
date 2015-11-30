@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+    Slixmpp: The Slick XMPP Library
+    Copyright (C) 2010  Nathanael C. Fritz
+    This file is part of Slixmpp.
+
+    See the file LICENSE for copying permission.
+"""
+import sys
+import logging
+
+from getpass import getpass
+from argparse import ArgumentParser
+
+import slixmpp
+import threading
+
+
+                  
+class one2oneRcvSnd(slixmpp.ClientXMPP):
+
+    """
+    A simple Slixmpp bot that will echo messages it
+    receives, along with a short thank you message.
+    """
+
+    def __init__(self, jid, password, to):
+        slixmpp.ClientXMPP.__init__(self, jid, password)
+       
+        self.add_event_handler("session_start", self.start)
+
+   
+        self.add_event_handler("message", self.message)
+        self.recipient = to
+        
+    def start(self, event):
+        """
+        Process the session_start event.
+
+        Typical actions for the session_start event are
+        requesting the roster and broadcasting an initial
+        presence stanza.
+
+        Arguments:
+            event -- An empty dictionary. The session_start
+                     event does not provide any additional
+                     data.
+        """
+        self.send_presence()
+        self.get_roster()
+
+        self.send_message(mto = self.recipient, mbody='start', mtype='chat')
+        print('2')
+     
+             
+        
+    def message(self, msg):
+        print(msg['body'])
+        # send msg to otr
+        self.SendMessage(self.recipient , msg['body'])
+             
+    # call by otr
+    def SendMessage(self, jid, message):
+        self.send_message(mto = jid, mbody=message, mtype='chat')
+        sys.stdout.flush()
+             
+     
+
+
+if __name__ == '__main__':
+   
+    jid = "one@arewesecureyet.org"
+
+    password = "1234"
+    to = "two@arewesecureyet.org"
+    
+
+    xmpp =  one2oneRcvSnd(jid, password, to)
+    xmpp.register_plugin('xep_0030') # Service Discovery
+    xmpp.register_plugin('xep_0004') # Data Forms
+    xmpp.register_plugin('xep_0060') # PubSub
+    xmpp.register_plugin('xep_0199') # XMPP Ping
+
+    # Connect to the XMPP server and start processing XMPP stanzas.
+    xmpp.connect()
+    xmpp.process() 
+   
+
