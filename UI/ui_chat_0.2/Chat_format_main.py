@@ -25,3 +25,9 @@ if __name__ == "__main__":
     myWindow = MyWindow()
     myWindow.show()
     app.exec_()
+    asd = 1
+    
+        app = QApplication(sys.argv)
+        myWindow = MyWindow()
+        myWindow.show()
+        app.exec_()

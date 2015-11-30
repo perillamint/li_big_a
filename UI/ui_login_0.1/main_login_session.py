@@ -15,16 +15,15 @@ class MyWindow(QMainWindow, form_class):
     def btn_clicked(self):
         ID = self.input_ID.text()
         password = self.input_password.text()
-	
-	xmpp = connectClient(ID,password)
-	xmpp.register_plugin('xep_0030')
-	xmpp.register_plugin('xep_0004')
-	xmpp.register_plugin('xep_0060')
-	xmpp.register_plugin('xep_0199')
-	
-	xmpp.connect()
-	xmpp.process()
-	
+
+        xmpp = connectClient(ID,password)
+        xmpp.register_plugin('xep_0030')
+        xmpp.register_plugin('xep_0004')
+        xmpp.register_plugin('xep_0060')
+        xmpp.register_plugin('xep_0199')
+        xmpp.connect()
+        xmpp.process()
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = MyWindow()
