@@ -3,6 +3,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
 import Chat_format
+import otrmanager
+
 
 form_class = uic.loadUiType("Chat_format.ui")[0]
 
@@ -14,6 +16,8 @@ class MyWindow(QMainWindow, form_class):
 
     def btn_clicked(self):
         text = self.chatInput.text()
+        id= "two@arewesecureyet.org"
+        otrmanager.OTRManager.Instance().SendMessage(id,text)
         self.chatLog.setText(text)
 
 if __name__ == "__main__":

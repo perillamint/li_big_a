@@ -259,6 +259,7 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <zorder>input_password</zorder>
     </widget>
     <widget class="QTextEdit" name="textEdit_2">
      <property name="geometry">
@@ -282,6 +283,32 @@ p, li { white-space: pre-wrap; }
 &lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:48pt;&quot;&gt;Chatting App&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>30</y>
+       <width>56</width>
+       <height>12</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>70</y>
+       <width>56</width>
+       <height>12</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
     <zorder>frame_2</zorder>
     <zorder>input_ID</zorder>
     <zorder>label_ID</zorder>
@@ -292,6 +319,8 @@ p, li { white-space: pre-wrap; }
     <zorder>text_register</zorder>
     <zorder>timeEdit</zorder>
     <zorder>textEdit_2</zorder>
+    <zorder>label</zorder>
+    <zorder>label_2</zorder>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
